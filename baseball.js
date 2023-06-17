@@ -1,12 +1,12 @@
 // TODO: Move this to its own file
-let names;
+let namesJson;
 async function fetchNames() {
     return fetch('./names.json')
         .then(response => {
             return response.json();
         })
         .then(data => {
-            names = data;
+            namesJson = data;
         })
 }
 
@@ -73,7 +73,7 @@ let innings;
 const generatePlayer = () => {
     const seed = String(Math.floor(Math.random() * (399999999 - 10000000 + 1) + 10000000));
     console.log(seed)
-    console.log(names.female)
+    console.log(namesJson.female)
     let generatedNames = getNames(seed.substring(0, 7));
     let randomPlayer = new Player(
         fName = generatedNames[1],
@@ -82,7 +82,11 @@ const generatePlayer = () => {
         gender = generatedNames[2],
 
     );
-    return randomPlayer
+    if (team_one.length >= 14) {
+        team_one.push(randomPlayer)
+    } else {
+        team_two.push(randomPlayer)
+    }
 };
 
 const getNames = (seed) => {
@@ -91,20 +95,19 @@ const getNames = (seed) => {
     console.log(seed.substring(1, 4))
     console.log(seed.substring(4, 7))
     const fnameSeed = seed.substring(4, 7)
-    console.log(names.female)
-    let names = [names.surname[Number(seed.substring(1, 4))]]
+    let names = [namesJson.surname[Number(seed.substring(1, 4))]]
 
     if (seed[0] === "1") {
-        names.push(namesMale[Number(fnameSeed)])
+        names.push(namesJson.male[Number(fnameSeed)])
         names.push("male")
     } else if (seed[0] === "2") {
-        names.push(namesFemale[Number(fnameSeed)])
+        names.push(namesJson.female[Number(fnameSeed)])
         names.push("female")
     } else {
         if (Number(seed) % 2 === 1) {
-            names.push(namesMale[Number(fnameSeed)])
+            names.push(namesJson.male[Number(fnameSeed)])
         } else {
-            names.push(namesFemale[Number(fnameSeed)])
+            names.push(namesJson.female[Number(fnameSeed)])
         }
         names.push("Unspecified")
     }
@@ -117,10 +120,11 @@ const getNames = (seed) => {
 function runSim() {
     fetchNames()
         .then(() => {
-            console.log(names)
+            console.log(namesJson)
             for (let x = 0; x < 10; x++) {
                 generatePlayer()
             }
+            console.log(team_one, team_two)
         })
 }
 
