@@ -30,6 +30,17 @@ class Player {
     position;
     rightHanded;
     fieldPosition;
+    constructor() {
+        this.fName = fName
+        this.sName = sName
+        this.gender = gender
+        this.age = age
+        this.batting = batting
+        this.pitching = pitching
+        this.catching = catching
+        this.running = running
+        this.rightHanded = rightHanded
+    }
 }
 
 /*
@@ -73,16 +84,21 @@ let innings;
 const generatePlayer = () => {
     const seed = String(Math.floor(Math.random() * (399999999 - 10000000 + 1) + 10000000));
     console.log(seed)
-    console.log(namesJson.female)
     let generatedNames = getNames(seed.substring(0, 7));
+    console.log(generatedNames)
     let randomPlayer = new Player(
         fName = generatedNames[1],
         sName = generatedNames[0],
         age = Number(seed.slice[-1] + seed[0]),
         gender = generatedNames[2],
-
+        batting = Number(seed.substring(1, 3)),
+        pitching = Number(seed.substring(3, 5)),
+        catching = Number(seed.substring(5, 7)),
+        running = Number((seed[1] + seed[7])),
+        rightHanded = true ? (Number(seed[-1]) / 2 === 1) : false
     );
-    if (team_one.length >= 14) {
+    console.log(randomPlayer)
+    if (team_one.length < 14) {
         team_one.push(randomPlayer)
     } else {
         team_two.push(randomPlayer)
@@ -90,10 +106,6 @@ const generatePlayer = () => {
 };
 
 const getNames = (seed) => {
-    console.log(seed)
-    console.log(seed[4])
-    console.log(seed.substring(1, 4))
-    console.log(seed.substring(4, 7))
     const fnameSeed = seed.substring(4, 7)
     let names = [namesJson.surname[Number(seed.substring(1, 4))]]
 
@@ -121,7 +133,7 @@ function runSim() {
     fetchNames()
         .then(() => {
             console.log(namesJson)
-            for (let x = 0; x < 10; x++) {
+            for (let x = 0; x < 28; x++) {
                 generatePlayer()
             }
             console.log(team_one, team_two)
