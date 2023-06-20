@@ -158,12 +158,41 @@ function setPositions(team) {
 }
 
 function runInning() {
-    while (gameState.outs != 3) {
-        pitchBall(teamTwo[])
+
+    while (gameState.outs < 3) {
+        let result = pitchBall(teamOne[0], teamTwo[0])
+        if (result === true) {
+            console.log("Its a hit")
+        } else {
+            console.log("Their outta there")
+            gameState.outs = gameState.outs + 1
+            teamTwo.push(teamTwo.shift())
+        }
     }
+
+
+
+    // for (let x = 0; x < 5; x++) {
+    //     if (x % 2 == 1) {
+    //         let score = Number(document.querySelector('#home-score').innerHTML)
+    //         score++;
+    //         document.querySelector('#home-score').innerHTML = score
+    //     } else {
+    //         let score = Number(document.querySelector('#away-score').innerHTML)
+    //         score++;
+    //         document.querySelector('#away-score').innerHTML = score
+    //     }
+    //     setTimeout(5000)
+    // }
 }
 
-function pitchBall(pitcher) {
+function pitchBall(pitcher, batter) {
+    console.log(batter)
+    console.log(pitcher)
+    if (batter.batting > pitcher.pitching) {
+        return true
+    }
+    return false
 
 }
 
@@ -177,6 +206,10 @@ function runSim() {
             teamOne.sort(battingSort)
             teamTwo.sort(pitchingSort)
             teamTwo = setPositions(teamTwo)
+            setTimeout(function () {
+                runInning()
+
+            }, 2000);
         })
 }
 

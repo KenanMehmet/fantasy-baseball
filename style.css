@@ -22,9 +22,13 @@
 .game-container {
     padding: 10vw;
     justify-content: center;
+    text-align: center;
 }
 
 .game-header {
-    display: flex;
-    align-content: center;
+    display: grid;
+    align-items: center;
+    grid-template-columns: repeat(3, 4fr);
 }
+
+.team-title {}
