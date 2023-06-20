@@ -18,3 +18,13 @@
         transform: rotate(360deg);
     }
 }
+
+.game-container {
+    padding: 10vw;
+    justify-content: center;
+}
+
+.game-header {
+    display: flex;
+    align-content: center;
+}

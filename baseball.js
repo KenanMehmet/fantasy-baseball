@@ -74,6 +74,7 @@ let teamOne = [];
 let teamTwo = [];
 let bases = [undefined, undefined, undefined, undefined];
 let gameState = {
+    outs: 0,
     strikes: 0,
     balls: 0,
     atBat: teamOne,
@@ -157,8 +158,8 @@ function setPositions(team) {
 }
 
 function runInning() {
-    if (gameState.strikes != 3) {
-
+    while (gameState.outs != 3) {
+        pitchBall(teamTwo[])
     }
 }
 
