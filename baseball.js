@@ -10,12 +10,8 @@ async function fetchNames() {
         })
 }
 
-
-
-
 let loader = document.querySelector('#loading')
 
-loader.style.display = "none"
 class Player {
     fName;
     sName;
@@ -56,7 +52,7 @@ gender first name last name hand origin
 
 */
 
-const positions = ['PT', 'CT', 'FB', 'SB', 'TB', 'SS', 'LF', 'CF', 'RF']
+const positions = ['PT', 'CT', '1B', '2B', '3B', 'SS', 'LF', 'CF', 'RF']
 /*
 Each position conventionally has an associated number, for use in scorekeeping by the official scorer: 
 1 (pitcher), 2 (catcher), 3 (first baseman), 4 (second baseman), 
@@ -74,18 +70,23 @@ RF
 */
 
 
-let team_one = [];
-let team_two = [];
-let bases = [];
-let strikeOuts = 0;
-let innings;
+let teamOne = [];
+let teamTwo = [];
+let bases = [undefined, undefined, undefined, undefined];
+let gameState = {
+    strikes: 0,
+    balls: 0,
+    atBat: teamOne,
+    innings: 1,
+    homeScore: 0,
+    awayScore: 0,
+};
+let innings = 1;
 
 
 const generatePlayer = () => {
     const seed = String(Math.floor(Math.random() * (399999999 - 10000000 + 1) + 10000000));
-    console.log(seed)
     let generatedNames = getNames(seed.substring(0, 7));
-    console.log(generatedNames)
     let randomPlayer = new Player(
         fName = generatedNames[1],
         sName = generatedNames[0],
@@ -97,11 +98,10 @@ const generatePlayer = () => {
         running = Number((seed[1] + seed[7])),
         rightHanded = true ? (Number(seed[-1]) / 2 === 1) : false
     );
-    console.log(randomPlayer)
-    if (team_one.length < 14) {
-        team_one.push(randomPlayer)
+    if (teamOne.length < 14) {
+        teamOne.push(randomPlayer)
     } else {
-        team_two.push(randomPlayer)
+        teamTwo.push(randomPlayer)
     }
 };
 
@@ -127,17 +127,58 @@ const getNames = (seed) => {
     return names
 }
 
+function pitchingSort(a, b) {
+    if (a.pitching < b.pitching) {
+        return 1;
+    }
+    if (a.pitching > b.pitching) {
+        return -1;
+    }
+    return 0;
+}
 
+function battingSort(a, b) {
+    if (a.pitching < b.pitching) {
+        return 1;
+    }
+    if (a.pitching > b.pitching) {
+        return -1;
+    }
+    return 0;
+}
+
+function setPositions(team) {
+    team[0].position = "PT"
+    // TODO: Once more bases get added add in the extra bases
+    for (let i = 1; i < (6 + bases.length); i++) {
+        team[i].position = positions[i]
+    }
+    return team
+}
+
+function runInning() {
+    if (gameState.strikes != 3) {
+
+    }
+}
+
+function pitchBall(pitcher) {
+
+}
 
 function runSim() {
     fetchNames()
         .then(() => {
-            console.log(namesJson)
             for (let x = 0; x < 28; x++) {
                 generatePlayer()
             }
-            console.log(team_one, team_two)
+            loader.style.display = "none"
+            teamOne.sort(battingSort)
+            teamTwo.sort(pitchingSort)
+            teamTwo = setPositions(teamTwo)
         })
 }
+
+
 
 runSim()
