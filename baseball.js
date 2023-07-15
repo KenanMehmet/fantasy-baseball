@@ -41,7 +41,7 @@ class Player {
         this.fatigue = 0
     }
     pitchingStrength() {
-        const strength = Math.floor((this.batting - Math.floor(Math.random() * 5)) - (Math.random() * 10 + this.fatigue));
+        const strength = Math.floor((this.batting - Math.floor(Math.random() * 10)) - (Math.random() * 10 + this.fatigue));
         this.fatiguePlayer();
         console.log(strength)
         return strength
@@ -103,6 +103,8 @@ let gameState = {
     strikes: 0,
     balls: 0,
     top: true,
+    batting: teamOne,
+    pitching: teamTwo,
     innings: 1,
     homeScore: 0,
     awayScore: 0,
@@ -120,6 +122,20 @@ const logSeed = (seed) => {
         (theLog * 50)
     )
 
+}
+
+const swapTeams = () => {
+    if (gameState.top) {
+        gameState.pitching = teamOne
+        gameState.bating = teamTwo
+        gameState.top = false
+    }
+    else {
+        gameState.pitching = teamTwo
+        gameState.bating = teamOne
+        gameState.top = true
+        gameState.innings++
+    }
 }
 
 
@@ -229,17 +245,33 @@ function runInning() {
 }
 
 function pitchBall(pitcher, batter) {
-    for (let i = 0; i < 6; i++) {
+    while (gameState.strikes < 3) {
         console.log("Batter " + batter.batting)
+        gameState.awayScore++;
+        if (gameState.awayScore > 4) {
+            break
+        }
         if (batter.batting > pitcher.pitchingStrength()) {
             gameState.strikes = 0;
+            catchBall("blank")
             return true
         }
         gameState.strikes++;
     }
     gameState.strikes = 0;
     return false
+}
 
+function catchBall(ballVelocity) {
+    //ballVelocity will contain 2 numbers, direction and speed
+    const ballDirection = Math.random() < 0.5 ? -1 : 1
+    const ballSpeed = Math.random() < 0.5 ? "B" : "F"
+    if (ballDirection === -1) {
+        const catcher = gameState.pitching.find(
+            player => player.position === (`L${ballSpeed}`)
+        )
+        console.log(catcher)
+    }
 }
 
 function runSim() {
@@ -252,6 +284,8 @@ function runSim() {
             teamOne.sort(battingSort)
             teamTwo.sort(pitchingSort)
             teamTwo = setPositions(teamTwo)
+            console.log(teamOne)
+            console.log(teamTwo)
             setTimeout(function () {
                 runInning()
 
