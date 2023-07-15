@@ -22,6 +22,7 @@ class Player {
     pitching;
     catching;
     running;
+    fatigue;
     stamina;
     position;
     rightHanded;
@@ -36,7 +37,31 @@ class Player {
         this.catching = catching
         this.running = running
         this.rightHanded = rightHanded
+        this.stamina = stamina
+        this.fatigue = 0
     }
+    pitchingStrength() {
+        const strength = Math.floor((this.batting - Math.floor(Math.random() * 5)) - (Math.random() * 10 + this.fatigue));
+        this.fatiguePlayer();
+        console.log(strength)
+        return strength
+    }
+    battingStrength() {
+        const strength = Math.floor((this.pitching - Math.floor(Math.random() * 5)) - (Math.random() * 10 + this.fatigue));
+        this.fatiguePlayer();
+        console.log(strength)
+        return strength
+    }
+    fatiguePlayer() {
+        this.fatigue += Math.floor(
+            (
+                (
+                    Math.random() * 100 / this.stamina
+                ) * ((100 - this.fatigue) / 100)
+            )
+            * 100) / 100
+    }
+
 }
 
 /*
@@ -77,12 +102,25 @@ let gameState = {
     outs: 0,
     strikes: 0,
     balls: 0,
-    atBat: teamOne,
+    top: true,
     innings: 1,
     homeScore: 0,
     awayScore: 0,
 };
 let innings = 1;
+
+const logSeed = (seed) => {
+    // For testing to randomize the seeds even more, may just not be worth the effort
+    let theLog = Math.log10(Number(seed.substring(1, seed.length)))
+    console.log(theLog)
+    console.log((theLog * theLog * theLog))
+    console.log((theLog * 50))
+    console.log(
+        (theLog * theLog * theLog) -
+        (theLog * 50)
+    )
+
+}
 
 
 const generatePlayer = () => {
@@ -97,6 +135,7 @@ const generatePlayer = () => {
         pitching = Number(seed.substring(3, 5)),
         catching = Number(seed.substring(5, 7)),
         running = Number((seed[1] + seed[7])),
+        stamina = Number((seed[2] + seed[6])),
         rightHanded = true ? (Number(seed[-1]) / 2 === 1) : false
     );
     if (teamOne.length < 14) {
@@ -124,7 +163,6 @@ const getNames = (seed) => {
         }
         names.push("Unspecified")
     }
-    console.log(names)
     return names
 }
 
@@ -158,11 +196,15 @@ function setPositions(team) {
 }
 
 function runInning() {
-
+    console.table(teamTwo[0].stamina, teamTwo[0].pitching)
     while (gameState.outs < 3) {
         let result = pitchBall(teamOne[0], teamTwo[0])
         if (result === true) {
-            console.log("Its a hit")
+            gameState.homeScore += 1
+            if (gameState.homeScore > 3) {
+                console.log("Home won")
+                break
+            }
         } else {
             console.log("Their outta there")
             gameState.outs = gameState.outs + 1
@@ -187,11 +229,15 @@ function runInning() {
 }
 
 function pitchBall(pitcher, batter) {
-    console.log(batter)
-    console.log(pitcher)
-    if (batter.batting > pitcher.pitching) {
-        return true
+    for (let i = 0; i < 6; i++) {
+        console.log("Batter " + batter.batting)
+        if (batter.batting > pitcher.pitchingStrength()) {
+            gameState.strikes = 0;
+            return true
+        }
+        gameState.strikes++;
     }
+    gameState.strikes = 0;
     return false
 
 }
