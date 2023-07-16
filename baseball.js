@@ -10,6 +10,8 @@ async function fetchNames() {
         })
 }
 
+const fanfare = new Audio('PipeOrganCharge.mp3')
+
 let loader = document.querySelector('#loading')
 
 class Player {
@@ -52,6 +54,11 @@ class Player {
         console.log(strength)
         return strength
     }
+    canCatch(ballVelocity) {
+        //TODO: Do some actual maths here
+        const strength = Math.floor((Math.random() * 100) - (this.catching - (Math.random() * 5)))
+        return strength < 25 ? true : false
+    }
     fatiguePlayer() {
         this.fatigue += Math.floor(
             (
@@ -61,6 +68,7 @@ class Player {
             )
             * 100) / 100
     }
+
 
 }
 
@@ -77,7 +85,7 @@ gender first name last name hand origin
 
 */
 
-const positions = ['PT', 'CT', '1B', '2B', '3B', 'SS', 'LF', 'CF', 'RF']
+const positions = ['PT', 'CT', 'RB', 'CB', 'LB', 'SS', 'LF', 'CF', 'RF']
 /*
 Each position conventionally has an associated number, for use in scorekeeping by the official scorer: 
 1 (pitcher), 2 (catcher), 3 (first baseman), 4 (second baseman), 
@@ -103,8 +111,8 @@ let gameState = {
     strikes: 0,
     balls: 0,
     top: true,
-    batting: teamOne,
-    pitching: teamTwo,
+    batting: teamTwo,
+    pitching: teamOne,
     innings: 1,
     homeScore: 0,
     awayScore: 0,
@@ -212,20 +220,25 @@ function setPositions(team) {
 }
 
 function runInning() {
-    console.table(teamTwo[0].stamina, teamTwo[0].pitching)
-    while (gameState.outs < 3) {
-        let result = pitchBall(teamOne[0], teamTwo[0])
-        if (result === true) {
-            gameState.homeScore += 1
-            if (gameState.homeScore > 3) {
-                console.log("Home won")
-                break
+    fanfare.play();
+    while (gameState.innings < 3) {
+        while (gameState.outs < 3) {
+            console.log(teamTwo[0])
+            let result = pitchBall(teamOne[0], teamTwo[0])
+            if (result === true) {
+                gameState.homeScore += 1
+                if (gameState.homeScore > 3) {
+                    console.log("Home won")
+                    break
+                }
+            } else {
+                console.log("Their outta there")
+                gameState.outs = gameState.outs + 1
+                teamTwo.push(teamTwo[0])
+                teamTwo.shift()
             }
-        } else {
-            console.log("Their outta there")
-            gameState.outs = gameState.outs + 1
-            teamTwo.push(teamTwo.shift())
         }
+        swapTeams()
     }
 
 
@@ -245,16 +258,20 @@ function runInning() {
 }
 
 function pitchBall(pitcher, batter) {
+
+    //TODO: 
     while (gameState.strikes < 3) {
-        console.log("Batter " + batter.batting)
+        console.log("Up at Bat is:" + batter.fName)
         gameState.awayScore++;
         if (gameState.awayScore > 4) {
             break
         }
         if (batter.batting > pitcher.pitchingStrength()) {
             gameState.strikes = 0;
-            catchBall("blank")
-            return true
+            if (catchBall("blank")) {
+                return true
+            }
+            return false
         }
         gameState.strikes++;
     }
@@ -262,16 +279,39 @@ function pitchBall(pitcher, batter) {
     return false
 }
 
-function catchBall(ballVelocity) {
+function findCatcher(ballVelocity) {
     //ballVelocity will contain 2 numbers, direction and speed
-    const ballDirection = Math.random() < 0.5 ? -1 : 1
+    // TODO: Redo the entire thing once extra bases are added. Goody
+    let ballDirection = Math.random()
+    //temperaory code
+    if (ballDirection > 0.6) {
+        ballDirection = 1
+    } else if (ballDirection < 0.3) {
+        ballDirection = -1
+    } else { ballDirection = 0 }
     const ballSpeed = Math.random() < 0.5 ? "B" : "F"
+    let catcher;
     if (ballDirection === -1) {
-        const catcher = gameState.pitching.find(
+        catcher = gameState.pitching.find(
             player => player.position === (`L${ballSpeed}`)
         )
-        console.log(catcher)
+    } else if (ballDirection === 1) {
+        catcher = gameState.pitching.find(
+            player => player.position === (`R${ballSpeed}`)
+        )
+    } else {
+        catcher = gameState.pitching.find(
+            player => player.position === (`C${ballSpeed}`)
+        )
     }
+    return catcher
+}
+
+function catchBall(ballVelocity) {
+    const catcher = findCatcher();
+    console.log("Catcher is:")
+    console.log(catcher)
+    return catcher.canCatch("blank");
 }
 
 function runSim() {
@@ -280,12 +320,12 @@ function runSim() {
             for (let x = 0; x < 28; x++) {
                 generatePlayer()
             }
-            loader.style.display = "none"
-            teamOne.sort(battingSort)
+            teamOne.sort(pitchingSort)
             teamTwo.sort(pitchingSort)
+            teamOne = setPositions(teamOne)
             teamTwo = setPositions(teamTwo)
-            console.log(teamOne)
-            console.log(teamTwo)
+            teamTwo.sort(battingSort)
+            loader.style.display = "none"
             setTimeout(function () {
                 runInning()
 
