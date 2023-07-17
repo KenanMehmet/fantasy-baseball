@@ -11,6 +11,9 @@ async function fetchNames() {
 }
 
 const fanfare = new Audio('PipeOrganCharge.mp3')
+const gameLog = document.querySelector('#game-log')
+const homeScore = document.querySelector('#home-score')
+const awayScore = document.querySelector('#away-score')
 
 let loader = document.querySelector('#loading')
 
@@ -67,6 +70,10 @@ class Player {
                 ) * ((100 - this.fatigue) / 100)
             )
             * 100) / 100
+    }
+    reinvigoratePlayer() {
+        //TODO: regenerate player fatigue based on position
+
     }
 
 
@@ -133,16 +140,19 @@ const logSeed = (seed) => {
 }
 
 const swapTeams = () => {
+    gameState.outs = 0
     if (gameState.top) {
         gameState.pitching = teamOne
         gameState.bating = teamTwo
         gameState.top = false
+        updateLog(`Bottom of the ${gameState.innings} inning`)
     }
     else {
         gameState.pitching = teamTwo
         gameState.bating = teamOne
         gameState.top = true
         gameState.innings++
+        updateLog(`Top of the ${gameState.innings} inning`)
     }
 }
 
@@ -210,6 +220,25 @@ function battingSort(a, b) {
     return 0;
 }
 
+function addScore() {
+    updateLog("HOME RUN")
+    if (gameState.top) {
+        gameState.awayScore++
+        awayScore.innerHTML = gameState.awayScore
+    }
+    else {
+        gameState.homeScore++
+        homeScore.innerHTML = gameState.homeScore
+    }
+}
+
+function updateLog(text) {
+    const para = document.createElement("p");
+    const node = document.createTextNode(text);
+    para.appendChild(node);
+    gameLog.appendChild(para)
+}
+
 function setPositions(team) {
     team[0].position = "PT"
     // TODO: Once more bases get added add in the extra bases
@@ -220,24 +249,29 @@ function setPositions(team) {
 }
 
 function runInning() {
-    fanfare.play();
-    while (gameState.innings < 3) {
+    //fanfare.play();
+    while (gameState.innings <= 9) {
         while (gameState.outs < 3) {
-            console.log(teamTwo[0])
-            let result = pitchBall(teamOne[0], teamTwo[0])
+            let result = pitchBall(
+                gameState.pitching.find(
+                    player => player.position === 'PT'
+                ), gameState.batting[0])
             if (result === true) {
-                gameState.homeScore += 1
-                if (gameState.homeScore > 3) {
+                addScore();
+                if (gameState.homeScore > 10) {
                     console.log("Home won")
+                    break
+                } else if (gameState.awayScore > 10) {
                     break
                 }
             } else {
-                console.log("Their outta there")
+                updateLog("OUT")
                 gameState.outs = gameState.outs + 1
-                teamTwo.push(teamTwo[0])
-                teamTwo.shift()
+                gameState.batting.push(gameState.batting[0])
+                gameState.batting.shift()
             }
         }
+        gameState.strikes = 0
         swapTeams()
     }
 
@@ -260,19 +294,24 @@ function runInning() {
 function pitchBall(pitcher, batter) {
 
     //TODO: 
+    updateLog(`Up at Bat is: ${batter.fName}`)
+    console.log("innings: " + gameState.innings)
+    console.log(gameState.strikes)
     while (gameState.strikes < 3) {
-        console.log("Up at Bat is:" + batter.fName)
+        console.log(gameState.strikes)
         gameState.awayScore++;
-        if (gameState.awayScore > 4) {
+        if (gameState.awayScore > 999) {
             break
         }
         if (batter.batting > pitcher.pitchingStrength()) {
             gameState.strikes = 0;
             if (catchBall("blank")) {
+                updateLog(`Caught by ${pitcher.fName}`)
                 return true
             }
             return false
         }
+        updateLog("STRIKE")
         gameState.strikes++;
     }
     gameState.strikes = 0;
@@ -326,10 +365,6 @@ function runSim() {
             teamTwo = setPositions(teamTwo)
             teamTwo.sort(battingSort)
             loader.style.display = "none"
-            setTimeout(function () {
-                runInning()
-
-            }, 2000);
         })
 }
 
