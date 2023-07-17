@@ -73,7 +73,7 @@ class Player {
     }
     reinvigoratePlayer() {
         //TODO: regenerate player fatigue based on position
-
+        this.fatigue = Math.floor(this.fatigue - (this.stamina / 10))
     }
 
 
@@ -141,16 +141,20 @@ const logSeed = (seed) => {
 
 const swapTeams = () => {
     gameState.outs = 0
+    teamOne.forEach(player => player.reinvigoratePlayer())
+    teamTwo.forEach(player => player.reinvigoratePlayer())
     if (gameState.top) {
         gameState.pitching = teamOne
         gameState.bating = teamTwo
         gameState.top = false
+        swapPitcher(teamOne)
         updateLog(`Bottom of the ${gameState.innings} inning`)
     }
     else {
         gameState.pitching = teamTwo
         gameState.bating = teamOne
         gameState.top = true
+        swapPitcher(teamTwo)
         gameState.innings++
         updateLog(`Top of the ${gameState.innings} inning`)
     }
@@ -220,13 +224,29 @@ function battingSort(a, b) {
     return 0;
 }
 
+function swapPitcher(team) {
+    team.sort(pitchingSort)
+    for (let i = 1; i < team.length; i++) {
+        if (
+            (team[0].pitching - team[0].fatigue) < (team[i].pitching - team[i].fatigue)
+        ) {
+            team[0].position = team[i].position
+            team[i].position = 'PT'
+        } else if ((team[0].pitching - team[0].fatigue) > (team[i].pitching + 10)) {
+            break
+        }
+    }
+}
+
 function addScore() {
     updateLog("HOME RUN")
     if (gameState.top) {
+        console.log("Point")
         gameState.awayScore++
         awayScore.innerHTML = gameState.awayScore
     }
     else {
+        console.log("Point")
         gameState.homeScore++
         homeScore.innerHTML = gameState.homeScore
     }
@@ -258,12 +278,6 @@ function runInning() {
                 ), gameState.batting[0])
             if (result === true) {
                 addScore();
-                if (gameState.homeScore > 10) {
-                    console.log("Home won")
-                    break
-                } else if (gameState.awayScore > 10) {
-                    break
-                }
             } else {
                 updateLog("OUT")
                 gameState.outs = gameState.outs + 1
@@ -291,14 +305,20 @@ function runInning() {
     // }
 }
 
+const wait = (ms) => {
+    const start = Date.now();
+    let now = start;
+    while (now - start < ms) {
+        now = Date.now();
+    }
+}
+
 function pitchBall(pitcher, batter) {
 
     //TODO: 
     updateLog(`Up at Bat is: ${batter.fName}`)
-    console.log("innings: " + gameState.innings)
-    console.log(gameState.strikes)
     while (gameState.strikes < 3) {
-        console.log(gameState.strikes)
+        wait(1)
         gameState.awayScore++;
         if (gameState.awayScore > 999) {
             break
