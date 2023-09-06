@@ -32,3 +32,9 @@
 }
 
 .team-title {}
+
+#game-log {
+    margin: 20px;
+    overflow-y: scroll;
+    height: 300px;
+}

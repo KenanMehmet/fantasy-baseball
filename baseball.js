@@ -14,6 +14,12 @@ const fanfare = new Audio('PipeOrganCharge.mp3')
 const gameLog = document.querySelector('#game-log')
 const homeScore = document.querySelector('#home-score')
 const awayScore = document.querySelector('#away-score')
+// TODO: Gravity based on playing field
+const planets = [["Earth", "#1a285a", 9.8]]
+const playingField = planets[0]
+const gravity = playingField[2]
+
+document.querySelector('body').style.backgroundColor = playingField[1]
 
 let loader = document.querySelector('#loading')
 
@@ -75,6 +81,9 @@ class Player {
         //TODO: regenerate player fatigue based on position
         this.fatigue = Math.floor(this.fatigue - (this.stamina / 10))
     }
+    runTime(timeInAir) {
+        return Math.floor((timeInAir * this.running) / 100)
+    }
 
 
 }
@@ -112,7 +121,7 @@ RF
 
 let teamOne = [];
 let teamTwo = [];
-let bases = [undefined, undefined, undefined, undefined];
+let bases = [undefined, undefined, undefined];
 let gameState = {
     outs: 0,
     strikes: 0,
@@ -141,13 +150,17 @@ const logSeed = (seed) => {
 
 const swapTeams = () => {
     gameState.outs = 0
+    bases.forEach(function (value, index) { bases[index] = undefined })
+    console.log(bases)
     teamOne.forEach(player => player.reinvigoratePlayer())
     teamTwo.forEach(player => player.reinvigoratePlayer())
     if (gameState.top) {
         gameState.pitching = teamOne
         gameState.bating = teamTwo
         gameState.top = false
+        console.log(teamOne)
         swapPitcher(teamOne)
+        console.log(teamTwo)
         updateLog(`Bottom of the ${gameState.innings} inning`)
     }
     else {
@@ -232,6 +245,7 @@ function swapPitcher(team) {
         ) {
             team[0].position = team[i].position
             team[i].position = 'PT'
+            break
         } else if ((team[0].pitching - team[0].fatigue) > (team[i].pitching + 10)) {
             break
         }
@@ -241,12 +255,10 @@ function swapPitcher(team) {
 function addScore() {
     updateLog("HOME RUN")
     if (gameState.top) {
-        console.log("Point")
         gameState.awayScore++
         awayScore.innerHTML = gameState.awayScore
     }
     else {
-        console.log("Point")
         gameState.homeScore++
         homeScore.innerHTML = gameState.homeScore
     }
@@ -277,7 +289,7 @@ function runInning() {
                     player => player.position === 'PT'
                 ), gameState.batting[0])
             if (result === true) {
-                addScore();
+                advanceBases(5, gameState.batting[0]);
             } else {
                 updateLog("OUT")
                 gameState.outs = gameState.outs + 1
@@ -319,7 +331,6 @@ function pitchBall(pitcher, batter) {
     updateLog(`Up at Bat is: ${batter.fName}`)
     while (gameState.strikes < 3) {
         wait(1)
-        gameState.awayScore++;
         if (gameState.awayScore > 999) {
             break
         }
@@ -327,7 +338,7 @@ function pitchBall(pitcher, batter) {
             gameState.strikes = 0;
             if (catchBall("blank")) {
                 updateLog(`Caught by ${pitcher.fName}`)
-                return true
+                return false
             }
             return false
         }
@@ -335,7 +346,7 @@ function pitchBall(pitcher, batter) {
         gameState.strikes++;
     }
     gameState.strikes = 0;
-    return false
+    return true
 }
 
 function findCatcher(ballVelocity) {
@@ -366,10 +377,39 @@ function findCatcher(ballVelocity) {
     return catcher
 }
 
+function advanceBases(timeInAir, batter) {
+    for (let i = 0; i < bases.length; i++) {
+        if (bases[i] !== undefined) {
+            let runresult = runToBase(timeInAir, bases[i])
+            if (runresult) {
+                if (i === 0) {
+                    addScore()
+                }
+                else {
+                    bases[i - 1] = bases[i]
+                }
+                bases[i] = undefined
+            }
+            else {
+                bases[i] = undefined
+                gameState.outs++
+                if (gameState.outs === 3) {
+                    break
+                }
+            }
+        }
+    }
+    bases.pop()
+    bases.push(batter)
+}
+
+function runToBase(timeInAir, runner) {
+    let runTime = runner.runTime(timeInAir)
+    return true
+}
+
 function catchBall(ballVelocity) {
     const catcher = findCatcher();
-    console.log("Catcher is:")
-    console.log(catcher)
     return catcher.canCatch("blank");
 }
 
