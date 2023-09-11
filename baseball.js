@@ -19,6 +19,12 @@ const planets = [["Earth", "#1a285a", 9.8]]
 const playingField = planets[0]
 const gravity = playingField[2]
 
+function randomNegativePostiveNumber(range) {
+    let num = Math.floor(Math.random() * range) + 1;
+    num *= Math.round(Math.random()) ? 1 : -1;
+    return num
+}
+
 document.querySelector('body').style.backgroundColor = playingField[1]
 
 let loader = document.querySelector('#loading')
@@ -52,13 +58,13 @@ class Player {
         this.fatigue = 0
     }
     pitchingStrength() {
-        const strength = Math.floor((this.batting - Math.floor(Math.random() * 10)) - (Math.random() * 10 + this.fatigue));
+        const strength = Math.floor((this.batting - randomNegativePostiveNumber(5)) - (Math.random() * 10 + this.fatigue));
         this.fatiguePlayer();
         console.log(strength)
         return strength
     }
     battingStrength() {
-        const strength = Math.floor((this.pitching - Math.floor(Math.random() * 5)) - (Math.random() * 10 + this.fatigue));
+        const strength = Math.floor((this.pitching - randomNegativePostiveNumber(15)) - (Math.random() * 10 + this.fatigue));
         this.fatiguePlayer();
         console.log(strength)
         return strength
@@ -84,9 +90,22 @@ class Player {
     runTime(timeInAir) {
         return Math.floor((timeInAir * this.running) / 100)
     }
+    runningSpeed() {
+        console.log(this)
+        console.log(this.running)
+        return Math.floor(
+            (
+                this.running - randomNegativePostiveNumber(2)
+            ) - (Math.random() * 10 + this.fatigue)
+        )
+    }
 
 
 }
+
+Player.prototype.toString = function playerToString() {
+    return `${this.fName}`
+};
 
 /*
 numbers to make for random generation
@@ -116,6 +135,22 @@ SS
 LF
 CF
 RF
+*/
+
+/*
+
+Distance to run to a base will be set at a number of 100, 
+we will then calculate the speed of the runner which we will
+calculate how many seconds it takes by how many of itself it takes
+to get to 100, then if the ball is not caught we will will then 
+take the closest catcher and have them use their pithing stat
+to calculate their throw speed and add that time onto them running.
+
+average running speed for running 90 feet (27.432 meters) is
+4.3 seconds
+source: https://www.topendsports.com/testing/tests/sprint-first-base.htm
+
+
 */
 
 
@@ -151,7 +186,6 @@ const logSeed = (seed) => {
 const swapTeams = () => {
     gameState.outs = 0
     bases.forEach(function (value, index) { bases[index] = undefined })
-    console.log(bases)
     teamOne.forEach(player => player.reinvigoratePlayer())
     teamTwo.forEach(player => player.reinvigoratePlayer())
     if (gameState.top) {
@@ -252,8 +286,8 @@ function swapPitcher(team) {
     }
 }
 
-function addScore() {
-    updateLog("HOME RUN")
+function addScore(runner) {
+    updateLog(`${runner.fName} has scored it for their team`)
     if (gameState.top) {
         gameState.awayScore++
         awayScore.innerHTML = gameState.awayScore
@@ -293,9 +327,9 @@ function runInning() {
             } else {
                 updateLog("OUT")
                 gameState.outs = gameState.outs + 1
-                gameState.batting.push(gameState.batting[0])
-                gameState.batting.shift()
             }
+            gameState.batting.push(gameState.batting[0])
+            gameState.batting.shift()
         }
         gameState.strikes = 0
         swapTeams()
@@ -330,23 +364,26 @@ function pitchBall(pitcher, batter) {
     //TODO: 
     updateLog(`Up at Bat is: ${batter.fName}`)
     while (gameState.strikes < 3) {
-        wait(1)
         if (gameState.awayScore > 999) {
             break
         }
         if (batter.batting > pitcher.pitchingStrength()) {
             gameState.strikes = 0;
+            updateLog(`Its a hit`)
+
             if (catchBall("blank")) {
                 updateLog(`Caught by ${pitcher.fName}`)
                 return false
             }
-            return false
+            return true
         }
-        updateLog("STRIKE")
-        gameState.strikes++;
+        else {
+            updateLog("STRIKE")
+            gameState.strikes++;
+        }
     }
     gameState.strikes = 0;
-    return true
+    return false
 }
 
 function findCatcher(ballVelocity) {
@@ -383,7 +420,7 @@ function advanceBases(timeInAir, batter) {
             let runresult = runToBase(timeInAir, bases[i])
             if (runresult) {
                 if (i === 0) {
-                    addScore()
+                    addScore(bases[i])
                 }
                 else {
                     bases[i - 1] = bases[i]
@@ -401,10 +438,17 @@ function advanceBases(timeInAir, batter) {
     }
     bases.pop()
     bases.push(batter)
+    updateLog(`Bases are ${bases[0]}, ${bases[1]}, ${bases[2]}`)
+
+}
+
+function calculateAirTime(batter) {
+    // do something here to calculate air time
 }
 
 function runToBase(timeInAir, runner) {
-    let runTime = runner.runTime(timeInAir)
+    console.log("RunSpeed:")
+    console.log(runner.runningSpeed())
     return true
 }
 
