@@ -438,8 +438,21 @@ function advanceBases(timeInAir, batter) {
     }
     bases.pop()
     bases.push(batter)
-    updateLog(`Bases are ${bases[0]}, ${bases[1]}, ${bases[2]}`)
+    updateLog(displayBases(bases))
 
+}
+
+function displayBases(bases) {
+    let log = "Bases are "
+    for (let i = 0; i < bases.length; i++) {
+        if (bases[i] !== undefined) {
+            log = log + `${bases[i]}, `
+        }
+        else {
+            log = log + "open, "
+        }
+    }
+    return log.slice(0, -2)
 }
 
 function calculateAirTime(batter) {
